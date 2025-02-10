@@ -10,26 +10,6 @@ export type BugRange = {
   endColumnNumber: number;
 };
 
-const bugRangeSchema = z.object({
-  bugRanges: z.array(z.object({
-    description: z.string().describe(`
-A description of the bug, formatted as plain text.
-Do not refer to specific line numbers as they are an unreliable reference point.
-
-Format it like (replace the {} with the actual values):
-<EXAMPLE>
-{a short title}
-
-{a single sentence with details}
-</EXAMPLE>
-
-You must include the empty line between the title and description.
-    `),
-    startLineNumber: z.number(),
-    endLineNumber: z.number(),
-  }))
-});
-
 export const findBugs = async (documentText: string): Promise<BugRange[]> => {
   const lines = documentText.split('\n');
   const formattedText = lines
@@ -58,6 +38,9 @@ Focus on actual bugs like:
 - Off-by-one errors
 - Memory leaks
 - Race conditions
+- Silly mistakes
+- Spelling mistakes
+
 Do not flag style issues or minor suggestions.
 
 Please analyze this code and find all potential bugs.
@@ -75,7 +58,25 @@ ${formattedText}
 
   const response = await getAIChatStructuredResponse({
     messages,
-    schemaOutput: bugRangeSchema,
+    schemaOutput: z.object({
+    bugRanges: z.array(z.object({
+      description: z.string().describe(`
+A description of the bug, formatted as plain text.
+Do not refer to specific line numbers as they are an unreliable reference point.
+
+Format it like (replace the {} with the actual values):
+<EXAMPLE>
+{a short title}
+
+{a single sentence with details}
+</EXAMPLE>
+
+You must include the empty line between the title and description.
+      `),
+      startLineNumber: z.number(),
+        endLineNumber: z.number(),
+      }))
+    })
   });
 
   console.log(response);
