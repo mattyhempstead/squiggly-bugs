@@ -12,16 +12,27 @@ export type BugRange = {
 
 const bugRangeSchema = z.object({
   bugRanges: z.array(z.object({
-    description: z.string(),
+    description: z.string().describe(`
+A description of the bug, formatted as plain text.
+Do not refer to specific line numbers as they are an unreliable reference point.
+
+Format it like (replace the {} with the actual values):
+<EXAMPLE>
+{a short title}
+
+{a single sentence with details}
+</EXAMPLE>
+
+You must include the empty line between the title and description.
+    `),
     startLineNumber: z.number(),
-    startColumnNumber: z.number(),
     endLineNumber: z.number(),
-    endColumnNumber: z.number(),
   }))
 });
 
 export const findBugs = async (documentText: string): Promise<BugRange[]> => {
-  const formattedText = documentText.split('\n')
+  const lines = documentText.split('\n');
+  const formattedText = lines
     .map((line, index) => `${index + 1}: ${line}`)
     .join('\n');
 
@@ -50,7 +61,7 @@ Focus on actual bugs like:
 Do not flag style issues or minor suggestions.
 
 Please analyze this code and find all potential bugs.
-Return an array of line and column ranges where bugs are found.
+Return an array of line ranges where bugs are found.
 
 Code to analyze:
 <CODE_FILE_CONTENT>
@@ -69,5 +80,9 @@ ${formattedText}
 
   console.log(response);
 
-  return response.bugRanges;
+  return response.bugRanges.map(range => ({
+    ...range,
+    startColumnNumber: 0,
+    endColumnNumber: lines[range.endLineNumber - 1]?.length ?? 0
+  }));
 };

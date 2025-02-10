@@ -34,9 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function updateDiagnostics(document: vscode.TextDocument, diagnosticCollection: vscode.DiagnosticCollection): Promise<void> {
-	await new Promise(resolve => setTimeout(resolve, 1000));
-
-	vscode.window.showInformationMessage('Checking for bugs in the current document!');
+	vscode.window.showInformationMessage('Checking for bugs in the current document...');
 	console.log('updateDiagnostics', document.uri);
 
 	const text = document.getText();
