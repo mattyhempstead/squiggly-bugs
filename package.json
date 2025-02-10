@@ -39,5 +39,10 @@
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.16.0",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "openai": "^4.83.0",
+    "zod": "^3.24.1"
   }
 }

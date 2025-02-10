@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { findBugs } from './ai/findBugs';
 
 console.log('squiggly-bugs!');
 
@@ -12,42 +13,42 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "squiggly-bugs" is now active!');
 
 	// Create a diagnostic collection named "helloSquiggles"
-	const diagnosticCollection = vscode.languages.createDiagnosticCollection('helloSquiggles');
+	const diagnosticCollection = vscode.languages.createDiagnosticCollection('squigglyBugs');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const commandDisposable = vscode.commands.registerCommand('squiggly-bugs.helloWorld', () => {
+	const commandDisposable = vscode.commands.registerCommand('squiggly-bugs.helloWorld', async () => {
 		// The code you place here will be executed every time your command is executed
 		if (vscode.window.activeTextEditor) {
-			updateDiagnostics(vscode.window.activeTextEditor.document, diagnosticCollection);
-			vscode.window.showInformationMessage('Added squiggles for "hello" in the current document!');
+			await updateDiagnostics(vscode.window.activeTextEditor.document, diagnosticCollection);
 		}
 	});
 
 	// Register a listener for document saves
-	const saveDisposable = vscode.workspace.onDidSaveTextDocument(document => {
-		updateDiagnostics(document, diagnosticCollection);
+	const saveDisposable = vscode.workspace.onDidSaveTextDocument(async document => {
+		await updateDiagnostics(document, diagnosticCollection);
 	});
 
 	context.subscriptions.push(commandDisposable, saveDisposable);
 }
 
-function updateDiagnostics(document: vscode.TextDocument, diagnosticCollection: vscode.DiagnosticCollection): void {
+async function updateDiagnostics(document: vscode.TextDocument, diagnosticCollection: vscode.DiagnosticCollection): Promise<void> {
+	await new Promise(resolve => setTimeout(resolve, 1000));
+
+	vscode.window.showInformationMessage('Checking for bugs in the current document!');
 	console.log('updateDiagnostics', document.uri);
 
 	const text = document.getText();
-	const pattern = /hello/g;
+	const bugRanges = await findBugs(text);
 	const diagnostics: vscode.Diagnostic[] = [];
-	let match: RegExpExecArray | null;
 
-	while ((match = pattern.exec(text)) !== null) {
-		const startPos = document.positionAt(match.index);
-		const endPos = document.positionAt(match.index + match[0].length);
-		const range = new vscode.Range(startPos, endPos);
-		// Create a diagnostic with a Warning severity (this will render a squiggly underline)
-		const diagnostic = new vscode.Diagnostic(range, 'Found "hello"', vscode.DiagnosticSeverity.Error);
-		diagnostic.source = 'helloSquiggles';
+	for (const range of bugRanges) {
+		const startPos = new vscode.Position(range.startLineNumber - 1, range.startColumnNumber);
+		const endPos = new vscode.Position(range.endLineNumber - 1, range.endColumnNumber);
+		const vsRange = new vscode.Range(startPos, endPos);
+		const diagnostic = new vscode.Diagnostic(vsRange, range.description, vscode.DiagnosticSeverity.Error);
+		diagnostic.source = 'squigglyBugs';
 		diagnostics.push(diagnostic);
 	}
 
