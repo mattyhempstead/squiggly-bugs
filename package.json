@@ -16,8 +16,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "squiggly-bugs.helloWorld",
-        "title": "Hello World"
+        "command": "squiggly-bugs.findBugs",
+        "title": "Find Bugs - squiggly-bugs"
+      },
+      {
+        "command": "squiggly-bugs.clearBugs",
+        "title": "Clear Bugs - squiggly-bugs"
       }
     ]
   },
